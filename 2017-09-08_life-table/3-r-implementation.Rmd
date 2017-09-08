@@ -295,3 +295,44 @@ life_table %>%
   theme_minimal() +
   hrbrthemes::scale_color_ipsum()
 ```
+
+
+### Without the explanation, how much code?
+
+```{r}
+# Parameters
+initial_age  <- 65
+ending_age   <- 121
+l_x          <- 600      # 60mil / 100thousand
+initial_q    <- 10/1000  # 10 lives out of 1000 at 65
+f_o_m_factor <- 1.1      # from the 10% increase each year
+
+# Age range
+age_range <- initial_age:ending_age
+
+# Initialize table with ages
+life_table <- tibble(ages = age_range)
+
+# Add all the other columns
+life_table <- life_table %>%
+  mutate(
+    
+    # Add the t years
+    t = ages - initial_age,
+    
+    # p using the force of mortality factor
+    `p_x+t` = (1 - initial_q) ^ (f_o_m_factor ^ t),
+    
+    # q is 1-p
+    `q_x+t` = 1 - `p_x+t`,
+    
+    # t_p_x from p
+    `t_p_x` = lag(`p_x+t`, default = 1) %>% cumprod(),
+    
+    # Number of lives left
+    `l_x+t` = l_x * t_p_x
+  )
+
+life_table %>%
+  modify(~round(.x, 4))
+```
